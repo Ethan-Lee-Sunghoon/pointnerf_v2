@@ -84,6 +84,184 @@ This environment only supports `pytorch3d` implementations:
 ```
 </details>
 
+## Point Initialization / Generalization:
+### &nbsp; Download pre-trained MVSNet checkpoints:
+We trained [MVSNet](https://github.com/xy-guo/MVSNet_pytorch) on DTU. You can Download ''MVSNet'' directory from 
+[google drive](https://drive.google.com/drive/folders/1xk1GhDhgPk1MrlX8ncfBz5hNMvSa9vS6?usp=sharing)
+and place them under '''checkpoints/'''
+
+### &nbsp;  Train 2D feature extraction and point representation
+#####  &nbsp; Directly use our trained checkpoints files:
+Download ''init'' directory from 
+[google drive](https://drive.google.com/drive/folders/1xk1GhDhgPk1MrlX8ncfBz5hNMvSa9vS6?usp=sharing).
+and place them under '''checkpoints/'''
+
+##### &nbsp; Or train from scratch:
+Train for point features of 63 channels (as in paper) 
+```
+bash dev_scripts/ete/dtu_dgt_d012_img0123_conf_color_dir_agg2.sh
+```
+Train for point features of 32 channels (better for per-scene optimization)
+```
+bash dev_scripts/ete/dtu_dgt_d012_img0123_conf_agg2_32_dirclr20.sh
+```
+After the training, you should pick a checkpoint and rename it to best checkpoint, e.g.:
+```
+cp checkpoints/dtu_dgt_d012_img0123_conf_color_dir_agg2/250000_net_ray_marching.pth  checkpoints/dtu_dgt_d012_img0123_conf_color_dir_agg2/best_net_ray_marching.pth
+
+cp checkpoints/dtu_dgt_d012_img0123_conf_color_dir_agg2/250000_net_mvs.pth  checkpoints/dtu_dgt_d012_img0123_conf_color_dir_agg2/best_net_mvs.pth
+```
+### &nbsp; Test feed forward inference on dtu scenes 
+These scenes that are selected by MVSNeRF, please also refer their code to understand the metrics calculation.
+```
+bash dev_scripts/dtu_test_inf/inftest_scan1.sh
+bash dev_scripts/dtu_test_inf/inftest_scan8.sh
+bash dev_scripts/dtu_test_inf/inftest_scan21.sh
+bash dev_scripts/dtu_test_inf/inftest_scan103.sh
+bash dev_scripts/dtu_test_inf/inftest_scan114.sh
+```
+
+## Per-scene Optimization:
+<img src="https://github.com/Xharlie/xharlie.github.io/raw/master/projects/project_sites/pointnerf/vid/ficus.gif" width="45%" /><img src="https://github.com/Xharlie/xharlie.github.io/raw/master/projects/project_sites/pointnerf/vid/scene101.gif" width="50%" />
+<img src="https://github.com/Xharlie/xharlie.github.io/raw/master/projects/project_sites/pointnerf/vid/truck.gif" width="70%" />
+
+(Please visit the project sites to see the original videos of above scenes, which have quality loss when being converted to gif files here.)
+### Download per-scene optimized Point-NeRFs
+ You can skip training and download the folders of ''nerfsynth'', ''tanksntemples'' and ''scannet'' here [google drive](https://drive.google.com/drive/folders/1xk1GhDhgPk1MrlX8ncfBz5hNMvSa9vS6?usp=sharing), and place them in ''checkpoints/''.
+
+```
+pointnerf
+├── checkpoints
+│   ├── init
+    ├── MVSNet
+    ├── nerfsynth
+    ├── col_nerfsynth
+    ├── scannet
+    ├── tanksntemples
+```
+
+In each scene, we provide initialized point features and network weights ''0_net_ray_marching.pth'', points and weights at 20K steps ''20000_net_ray_marching.pth'' and 200K steps ''200000_net_ray_marching.pth''
+
+### Test the per-scene optimized Point-NeRFs
+#### NeRF Synthetics
+<details>
+  <summary>test scripts</summary>
+  
+```
+    bash dev_scripts/w_n360/chair_test.sh
+    bash dev_scripts/w_n360/drums_test.sh
+    bash dev_scripts/w_n360/ficus_test.sh
+    bash dev_scripts/w_n360/hotdog_test.sh
+    bash dev_scripts/w_n360/lego_test.sh
+    bash dev_scripts/w_n360/materials_test.sh
+    bash dev_scripts/w_n360/mic_test.sh
+    bash dev_scripts/w_n360/ship_test.sh
+```
+</details>
+
+
+#### ScanNet
+<details>
+  <summary>test scripts</summary>
+  
+```
+    bash dev_scripts/w_scannet_etf/scane101_test.sh
+    bash dev_scripts/w_scannet_etf/scane241_test.sh
+```
+</details>
+
+#### Tanks & Temples
+<details>
+  <summary>test scripts</summary>
+
+```
+    bash dev_scripts/w_tt_ft/barn_test.sh
+    bash dev_scripts/w_tt_ft/caterpillar_test.sh
+    bash dev_scripts/w_tt_ft/family_test.sh
+    bash dev_scripts/w_tt_ft/ignatius_test.sh
+    bash dev_scripts/w_tt_ft/truck_test.sh
+```
+</details>
+
+### Per-scene optimize from scatch 
+Make sure the ''checkpoints'' folder has ''init'' and ''MVSNet''.
+The training scripts will start to do initialization if there is no ''.pth'' files in a scene folder. It will start from the last ''.pth'' files until reach the iteration of ''maximum_step''.
+
+#### NeRF Synthetics using MVSNet (w/ alpha channel filtering during point cloud reconstruction and pycuda)
+<details>
+  <summary>train scripts</summary>
+
+```
+    bash dev_scripts/w_n360/chair.sh
+    bash dev_scripts/w_n360/drums.sh
+    bash dev_scripts/w_n360/ficus.sh
+    bash dev_scripts/w_n360/hotdog.sh
+    bash dev_scripts/w_n360/lego.sh
+    bash dev_scripts/w_n360/materials.sh
+    bash dev_scripts/w_n360/mic.sh
+    bash dev_scripts/w_n360/ship.sh
+```
+</details>
+
+
+#### NeRF Synthetics using MVSNet (w/ background color filtering during point cloud reconstruction and pytorch cuda)
+<details>
+  <summary>train scripts</summary>
+
+```
+    bash dev_scripts/w_n360/chair_cuda.sh
+    bash dev_scripts/w_n360/drums_cuda.sh
+    bash dev_scripts/w_n360/ficus_cuda.sh
+    bash dev_scripts/w_n360/hotdog_cuda.sh
+    bash dev_scripts/w_n360/lego_cuda.sh
+    bash dev_scripts/w_n360/materials_cuda.sh
+    bash dev_scripts/w_n360/mic_cuda.sh
+    bash dev_scripts/w_n360/ship_cuda.sh
+```
+</details>
+
+#### NeRF Synthetics using COLMAP points
+Please download the COLMAP data (see above). If there is {maximum_step}.pth checkpoint files in the path, the scripts below will also run test.
+<details>
+  <summary>train scripts</summary>
+
+```
+    bash dev_scripts/w_colmap_n360/col_chair.sh
+    bash dev_scripts/w_colmap_n360/col_drums.sh
+    bash dev_scripts/w_colmap_n360/col_ficus.sh
+    bash dev_scripts/w_colmap_n360/col_hotdog.sh
+    bash dev_scripts/w_colmap_n360/col_lego.sh
+    bash dev_scripts/w_colmap_n360/col_materials.sh
+    bash dev_scripts/w_colmap_n360/col_mic.sh
+    bash dev_scripts/w_colmap_n360/col_ship.sh
+```
+</details>
+
+#### ScanNet
+<details>
+  <summary>train scripts</summary>
+
+```
+    bash dev_scripts/w_scannet_etf/scene101.sh
+    bash dev_scripts/w_scannet_etf/scene241.sh
+```
+</details>
+
+#### Tanks & Temples
+<details>
+  <summary>train scripts</summary>
+
+```
+    bash dev_scripts/w_tt_ft/barn.sh
+    bash dev_scripts/w_tt_ft/caterpillar.sh
+    bash dev_scripts/w_tt_ft/family.sh
+    bash dev_scripts/w_tt_ft/ignatius.sh
+    bash dev_scripts/w_tt_ft/truck.sh
+```
+</details>
+
+
+
 ## Acknowledgement
 
 This repo is developed based on [PointNeRF](https://github.com/Xharlie/pointnerf). Please cite the corresponding papers. 
